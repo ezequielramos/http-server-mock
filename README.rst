@@ -21,12 +21,14 @@ http-server-mock is available on PyPI. To install it just run:
     pip install http-server-mock
 
 Using http-server-mock is similar to implement any Flask application.
-::
+
+.. code:: python
 
     from http_server_mock import HttpServerMock
     app = HttpServerMock(__name__)
 
     @app.route("/", methods=["GET"])
+
     def index():
         return "Hello world"
 
@@ -36,7 +38,8 @@ Using http-server-mock is similar to implement any Flask application.
         # r.text == Hello world 
 
 HttpServerMock will use a random route to know if the http server is running, if you want to set a specific route to do it just set the parameter is_alive_route:
-::
+
+.. code:: python
 
     from http_server_mock import HttpServerMock
     app = HttpServerMock(__name__, is_alive_route="/is-alive")
