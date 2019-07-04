@@ -1,4 +1,4 @@
-from main import HttpServerMock
+from http_server_mock import HttpServerMock
 import requests
 import time
 import unittest

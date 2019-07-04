@@ -6,6 +6,8 @@ import time
 import uuid
 import os
 
+__version__ = '1.0'
+
 isWindows = False
 
 if os.name == 'nt':
