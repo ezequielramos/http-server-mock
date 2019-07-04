@@ -29,7 +29,6 @@ Using http-server-mock is similar to implement any Flask application.
     app = HttpServerMock(__name__)
 
     @app.route("/", methods=["GET"])
-
     def index():
         return "Hello world"
 
