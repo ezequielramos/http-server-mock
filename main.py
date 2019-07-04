@@ -1,5 +1,6 @@
 from flask import Flask
 from threading import Thread
+from multiprocessing import Process
 import requests
 import time
 import uuid
@@ -15,7 +16,7 @@ class _RunInBackground(object):
         Thread(target=self.middleware_thread).start()
         
     def middleware_thread(self):
-        self.process = Thread(target=self.app._run, args=(self.host, self.port))
+        self.process = Process(target=self.app._run, args=(self.host, self.port))
         self.process.daemon = True
         self.process.start()
 
@@ -25,12 +26,22 @@ class _RunInBackground(object):
             time.sleep(0.1)
                 
     def __enter__(self):
-        while True:
-            r = requests.put('http://' + self.host + ':' + str(self.port) + self.is_alive_route)
-            if r.status_code == 200:
-                break
+        is_alive = False
+        for _ in range(5):
+            try:
+                r = requests.put('http://' + self.host + ':' + str(self.port) + self.is_alive_route)
+                if r.status_code == 200:
+                    is_alive = True
+                    break
+            except:
+                pass
+            time.sleep(0.01)
+
+        if not is_alive:
+            raise Exception('Server isn\'t alive')
 
     def __exit__(self, a, b, c):
+        self.process.terminate()
         self.should_suicide = True
 
 class HttpServerMock(Flask):
