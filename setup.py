@@ -13,7 +13,7 @@ with open(
     os.path.join(os.path.dirname(__file__), "http_server_mock.py"), **open_args
 ) as f:
     for line in f:
-        match = re.match(r"__version__.*'([0-9.]+)'", line)
+        match = re.match(r"__version__.*\"([0-9.]+)\"", line)
         if match:
             version = match.group(1)
             break
@@ -44,5 +44,5 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
     ],
-    install_requires=["flask"],
+    install_requires=["flask", "requests"],
 )
