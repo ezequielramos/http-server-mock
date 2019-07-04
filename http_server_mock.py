@@ -6,7 +6,7 @@ import time
 import uuid
 import os
 
-__version__ = "1.1"
+__version__ = "1.2"
 
 isWindows = False
 
