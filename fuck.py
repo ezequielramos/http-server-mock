@@ -1,6 +1,13 @@
-from flask import Flask
+from main import HttpServerMock
+import requests
 
-app = Flask(__name__)
+app = HttpServerMock('test-http-server-mock')
 
 @app.route("/", methods=["GET"])
-x = lambda a : a + 10
+def index_route():
+    return 'random text'
+
+with app.run('localhost', 5000):
+    r = requests.get('http://localhost:5000/')
+    print(r.status_code, 200)
+    print(r.text, 'random text')

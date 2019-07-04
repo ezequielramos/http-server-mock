@@ -4,6 +4,12 @@ from multiprocessing import Process
 import requests
 import time
 import uuid
+import os
+
+isWindows = False
+
+if os.name == 'nt':
+    isWindows = True
 
 class _RunInBackground(object):
     def __init__(self, app, is_alive_route, host=None, port=None):
@@ -13,10 +19,15 @@ class _RunInBackground(object):
         self.should_suicide = False
         self.is_alive_route = is_alive_route
 
-        Thread(target=self.middleware_thread).start()
+        if isWindows:
+            Thread(target=self.middleware_thread).start()
+        else:
+            self.process = Process(target=self.app._run, args=(self.host, self.port))
         
     def middleware_thread(self):
-        self.process = Process(target=self.app._run, args=(self.host, self.port))
+        self.process = Thread(target=self.app._run, args=(self.host, self.port))
+            
+
         self.process.daemon = True
         self.process.start()
 
@@ -41,7 +52,8 @@ class _RunInBackground(object):
             raise Exception('Server isn\'t alive')
 
     def __exit__(self, a, b, c):
-        self.process.terminate()
+        if not isWindows:
+            self.process.terminate()
         self.should_suicide = True
 
 class HttpServerMock(Flask):

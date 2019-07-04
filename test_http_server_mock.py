@@ -2,6 +2,12 @@ from main import HttpServerMock
 import requests
 import time
 import unittest
+import os
+
+isWindows = False
+
+if os.name == 'nt':
+    isWindows = True
 
 class TestHttpServerMock(unittest.TestCase):
     def test_simple_server(self):
@@ -17,8 +23,9 @@ class TestHttpServerMock(unittest.TestCase):
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.text, 'random text')
 
-        with self.assertRaises(Exception):
-            requests.get('http://localhost:5000/')
+        if not isWindows:
+            with self.assertRaises(Exception):
+                requests.get('http://localhost:5000/')
 
     def test_simple_server_custom_is_alive_route(self):
         app = HttpServerMock('test-http-server-mock', is_alive_route="/is-alive")
@@ -26,13 +33,14 @@ class TestHttpServerMock(unittest.TestCase):
         def index_route():
             return 'random text'
 
-        with app.run('localhost', 5000):
-            r = requests.get('http://localhost:5000/')
+        with app.run('localhost', 5001):
+            r = requests.get('http://localhost:5001/')
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.text, 'random text')
 
-        with self.assertRaises(Exception):
-            requests.get('http://localhost:5000/')
+        if not isWindows:
+            with self.assertRaises(Exception):
+                requests.get('http://localhost:5001/')
 
     def test_running_same_server_multiple_times(self):
 
@@ -42,29 +50,32 @@ class TestHttpServerMock(unittest.TestCase):
         def index_route():
             return 'random text'
 
-        with app.run('localhost', 5000):
-            r = requests.get('http://localhost:5000/')
+        with app.run('localhost', 5002):
+            r = requests.get('http://localhost:5002/')
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.text, 'random text')
 
-        with self.assertRaises(requests.exceptions.ConnectionError):
-            requests.get('http://localhost:5000/')
+        if not isWindows:
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                requests.get('http://localhost:5002/')
 
-        with app.run('localhost', 5000):
-            r = requests.get('http://localhost:5000/')
+        with app.run('localhost', 5003):
+            r = requests.get('http://localhost:5003/')
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.text, 'random text')
 
-        with self.assertRaises(requests.exceptions.ConnectionError):
-            requests.get('http://localhost:5000/')
+        if not isWindows:
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                requests.get('http://localhost:5003/')
 
         with app.run('localhost', 3000):
             r = requests.get('http://localhost:3000/')
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.text, 'random text')
 
-        with self.assertRaises(requests.exceptions.ConnectionError):
-            requests.get('http://localhost:3000/')
+        if not isWindows:
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                requests.get('http://localhost:3000/')
 
     def test_multiple_servers(self):
 
@@ -80,17 +91,19 @@ class TestHttpServerMock(unittest.TestCase):
             return 'another random text'
 
 
-        with app.run('localhost', 8000), another_app.run('localhost', 5000):
+        with app.run('localhost', 8000), another_app.run('localhost', 5004):
             r = requests.get('http://localhost:8000/')
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.text, 'random text')
 
-            r = requests.get('http://localhost:5000/')
+            r = requests.get('http://localhost:5004/')
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.text, 'another random text')
 
-        with self.assertRaises(requests.exceptions.ConnectionError):
-            requests.get('http://localhost:8000/')
+        if not isWindows:
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                requests.get('http://localhost:8000/')
 
-        with self.assertRaises(requests.exceptions.ConnectionError):
-            requests.get('http://localhost:5000/')
+        if not isWindows:
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                requests.get('http://localhost:5004/')
