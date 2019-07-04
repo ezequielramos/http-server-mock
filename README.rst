@@ -25,6 +25,7 @@ Using http-server-mock is similar to implement any Flask application.
 .. code:: python
 
     from http_server_mock import HttpServerMock
+    import requests
     app = HttpServerMock(__name__)
 
     @app.route("/", methods=["GET"])
@@ -33,9 +34,9 @@ Using http-server-mock is similar to implement any Flask application.
         return "Hello world"
 
     with app.run("localhost", 5000):
-        r = request.get("/")
+        r = requests.get("http://localhost:5000/")
         # r.status_code == 200
-        # r.text == Hello world 
+        # r.text == "Hello world"
 
 HttpServerMock will use a random route to know if the http server is running, if you want to set a specific route to do it just set the parameter is_alive_route:
 
