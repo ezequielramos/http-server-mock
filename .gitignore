@@ -1,3 +1,5 @@
 .vscode
 *.pyc
 build
+MANIFEST
+dist
