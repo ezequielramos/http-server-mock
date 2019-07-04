@@ -23,6 +23,7 @@ class _RunInBackground(object):
             Thread(target=self.middleware_thread).start()
         else:
             self.process = Process(target=self.app._run, args=(self.host, self.port))
+            self.process.start()
         
     def middleware_thread(self):
         self.process = Thread(target=self.app._run, args=(self.host, self.port))
