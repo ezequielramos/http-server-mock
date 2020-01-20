@@ -109,3 +109,15 @@ class TestHttpServerMock(unittest.TestCase):
         if not isWindows:
             with self.assertRaises(requests.exceptions.ConnectionError):
                 requests.get("http://localhost:5004/")
+
+    def test_multiple_servers(self):
+
+        app = HttpServerMock(
+            "test-http-server-mock", is_alive_route="/uma-rota-que-nao-existe",
+        )
+
+        app._testing_error = True
+
+        with self.assertRaises(Exception):
+            with app.run("localhost", 3001):
+                r = requests.get("http://localhost:3001/")

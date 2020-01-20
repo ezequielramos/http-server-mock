@@ -6,7 +6,7 @@ import time
 import uuid
 import os
 
-__version__ = "1.2"
+__version__ = "1.4"
 
 isWindows = False
 
@@ -41,7 +41,8 @@ class _RunInBackground(object):
 
     def __enter__(self):
         is_alive = False
-        for _ in range(40):
+        first_time = time.time()
+        while (time.time() - first_time) < 60:
             try:
                 r = requests.put(
                     "http://" + self.host + ":" + str(self.port) + self.is_alive_route
@@ -54,6 +55,7 @@ class _RunInBackground(object):
             time.sleep(0.05)
 
         if not is_alive:
+            self.__exit__("", "", "")
             raise Exception("Server isn't alive")
 
     def __exit__(self, a, b, c):
@@ -84,6 +86,7 @@ class HttpServerMock(Flask):
 
         self.is_alive_route = is_alive_route
         self.created_alive_route = False
+        self._testing_error = False
 
         return super().__init__(
             import_name,
@@ -103,8 +106,10 @@ class HttpServerMock(Flask):
         if not self.created_alive_route:
             self.created_alive_route = True
 
-            @self.route(self.is_alive_route, methods=["PUT"])
-            def is_alive_route_func():
-                return ""
+            if not self._testing_error:
+
+                @self.route(self.is_alive_route, methods=["PUT"])
+                def is_alive_route_func():
+                    return ""
 
         return _RunInBackground(self, self.is_alive_route, host=host, port=port)
