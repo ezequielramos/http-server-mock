@@ -112,9 +112,7 @@ class TestHttpServerMock(unittest.TestCase):
 
     def test_multiple_servers(self):
 
-        app = HttpServerMock(
-            "test-http-server-mock", is_alive_route="/uma-rota-que-nao-existe",
-        )
+        app = HttpServerMock("test-http-server-mock")
 
         app._testing_error = True
 

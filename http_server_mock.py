@@ -6,7 +6,7 @@ import time
 import uuid
 import os
 
-__version__ = "1.4"
+__version__ = "1.5"
 
 isWindows = False
 
@@ -43,6 +43,12 @@ class _RunInBackground(object):
         is_alive = False
         first_time = time.time()
         while (time.time() - first_time) < 60:
+
+            if not self.process.is_alive():
+                raise Exception(
+                    "Server is trying to use a port that is already in use."
+                )
+
             try:
                 r = requests.put(
                     "http://" + self.host + ":" + str(self.port) + self.is_alive_route
