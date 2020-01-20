@@ -41,7 +41,7 @@ class _RunInBackground(object):
 
     def __enter__(self):
         is_alive = False
-        for _ in range(5):
+        for _ in range(40):
             try:
                 r = requests.put(
                     "http://" + self.host + ":" + str(self.port) + self.is_alive_route
