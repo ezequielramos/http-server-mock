@@ -6,7 +6,7 @@ import time
 import uuid
 import os
 
-__version__ = "1.5"
+__version__ = "1.6"
 
 isWindows = False
 
@@ -15,14 +15,15 @@ if os.name == "nt":
 
 
 class _RunInBackground(object):
-    def __init__(self, app, is_alive_route, host=None, port=None):
+    def __init__(self, app, is_alive_route, host=None, port=None, using_thread=False):
         self.app = app
         self.host = host
         self.port = port
         self.should_suicide = False
         self.is_alive_route = is_alive_route
+        self.using_thread = using_thread
 
-        if isWindows:
+        if isWindows or self.using_thread:
             Thread(target=self.middleware_thread).start()
         else:
             self.process = Process(target=self.app._run, args=(self.host, self.port))
@@ -42,6 +43,10 @@ class _RunInBackground(object):
     def __enter__(self):
         is_alive = False
         first_time = time.time()
+
+        while self.process.ident is None:
+            time.sleep(0.1)
+
         while (time.time() - first_time) < 60:
 
             if not self.process.is_alive():
@@ -65,7 +70,7 @@ class _RunInBackground(object):
             raise Exception("Server isn't alive")
 
     def __exit__(self, a, b, c):
-        if not isWindows:
+        if not isWindows and not self.using_thread:
             self.process.terminate()
         self.should_suicide = True
 
@@ -94,7 +99,7 @@ class HttpServerMock(Flask):
         self.created_alive_route = False
         self._testing_error = False
 
-        return super().__init__(
+        super().__init__(
             import_name,
             static_url_path=static_url_path,
             static_folder=static_folder,
@@ -107,7 +112,7 @@ class HttpServerMock(Flask):
             root_path=root_path,
         )
 
-    def run(self, host=None, port=None):
+    def run(self, host=None, port=None, using_thread=False):
 
         if not self.created_alive_route:
             self.created_alive_route = True
@@ -118,4 +123,6 @@ class HttpServerMock(Flask):
                 def is_alive_route_func():
                     return ""
 
-        return _RunInBackground(self, self.is_alive_route, host=host, port=port)
+        return _RunInBackground(
+            self, self.is_alive_route, host=host, port=port, using_thread=using_thread
+        )
