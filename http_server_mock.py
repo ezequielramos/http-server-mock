@@ -1,12 +1,14 @@
-from flask import Flask
-from threading import Thread
-from multiprocessing import Process
 import requests
 import time
 import uuid
 import os
+from threading import Thread
+from multiprocessing import Process
 
-__version__ = "1.6"
+from flask import Flask
+from werkzeug.serving import make_server
+
+__version__ = "1.7"
 
 isWindows = False
 
@@ -15,37 +17,20 @@ if os.name == "nt":
 
 
 class _RunInBackground(object):
-    def __init__(self, app, is_alive_route, host=None, port=None, using_thread=False):
-        self.app = app
+    def __init__(self, app: Flask, is_alive_route, host=None, port=None):
         self.host = host
         self.port = port
-        self.should_suicide = False
         self.is_alive_route = is_alive_route
-        self.using_thread = using_thread
 
-        if isWindows or self.using_thread:
-            Thread(target=self.middleware_thread).start()
-        else:
-            self.process = Process(target=self.app._run, args=(self.host, self.port))
-            self.process.start()
-
-    def middleware_thread(self):
-        self.process = Thread(target=self.app._run, args=(self.host, self.port))
-
-        self.process.daemon = True
+        self.srv = make_server(host, port, app)
+        self.ctx = app.app_context()
+        self.ctx.push()
+        self.process = Thread(target=self.srv.serve_forever)
         self.process.start()
-
-        while True:
-            if self.should_suicide:
-                break
-            time.sleep(0.1)
 
     def __enter__(self):
         is_alive = False
         first_time = time.time()
-
-        while self.process.ident is None:
-            time.sleep(0.1)
 
         while (time.time() - first_time) < 60:
 
@@ -70,9 +55,7 @@ class _RunInBackground(object):
             raise Exception("Server isn't alive")
 
     def __exit__(self, a, b, c):
-        if not isWindows and not self.using_thread:
-            self.process.terminate()
-        self.should_suicide = True
+        self.srv.shutdown()
 
 
 class HttpServerMock(Flask):
@@ -112,7 +95,7 @@ class HttpServerMock(Flask):
             root_path=root_path,
         )
 
-    def run(self, host=None, port=None, using_thread=False):
+    def run(self, host=None, port=None):
 
         if not self.created_alive_route:
             self.created_alive_route = True
@@ -123,6 +106,4 @@ class HttpServerMock(Flask):
                 def is_alive_route_func():
                     return ""
 
-        return _RunInBackground(
-            self, self.is_alive_route, host=host, port=port, using_thread=using_thread
-        )
+        return _RunInBackground(self, self.is_alive_route, host=host, port=port)
