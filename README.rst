@@ -25,15 +25,17 @@ Using http-server-mock is similar to implement any Flask application.
 .. code:: python
 
     from http_server_mock import HttpServerMock
-    import requests
+    import requests, http
     app = HttpServerMock(__name__)
 
     @app.route("/", methods=["GET"])
     def index():
-        return "Hello world"
+        return "Hello world", http.HTTPStatus.OK
 
-    with app.run("localhost", 5000):
-        r = requests.get("http://localhost:5000/")
+    # you may get 'Server isn't alive' Exception with certain ports on macOS
+    # https://stackoverflow.com/questions/72795799/how-to-solve-403-error-with-flask-in-python
+    with app.run("localhost", 9000):
+        r = requests.get("http://localhost:9000/")
         # r.status_code == 200
         # r.text == "Hello world"
 
